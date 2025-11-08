@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -13,11 +13,14 @@ import {
   ScrollView,
   StatusBar,
   Animated,
+  Easing,
+  Platform,
 } from 'react-native';
 import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 const ITEM_WIDTH = (width - 48) / 2;
 
 // Paleta de colores profesionales y elegantes
@@ -38,6 +41,10 @@ export default function App() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  
+  // Refs para animaciones
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const modalScale = useRef(new Animated.Value(0)).current;
 
   // Función para obtener las fotos de la API
   const fetchPhotos = async () => {
@@ -64,52 +71,137 @@ export default function App() {
     fetchPhotos();
   };
 
-  // Función para abrir el modal con la foto seleccionada
+  // Función para abrir el modal con animación
   const openPhotoDetail = (photo) => {
     setSelectedPhoto(photo);
     setModalVisible(true);
+    Animated.spring(modalScale, {
+      toValue: 1,
+      tension: 50,
+      friction: 7,
+      useNativeDriver: true,
+    }).start();
   };
 
-  // Función para cerrar el modal
+  // Función para cerrar el modal con animación
   const closeModal = () => {
-    setModalVisible(false);
-    setSelectedPhoto(null);
+    Animated.timing(modalScale, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setModalVisible(false);
+      setSelectedPhoto(null);
+    });
   };
 
-  // Renderizar cada foto en la galería con gradientes coloridos
-  const renderPhotoItem = ({ item, index }) => {
+  // Componente de tarjeta animada
+  const AnimatedPhotoCard = ({ item, index }) => {
+    const [imageLoaded, setImageLoaded] = useState(false);
+    const scaleAnim = useRef(new Animated.Value(0)).current;
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const pressAnim = useRef(new Animated.Value(1)).current;
+    
     const gradientColors = CARD_COLORS[index % CARD_COLORS.length];
+    const aspectRatio = item.width / item.height;
+    
+    useEffect(() => {
+      Animated.parallel([
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          delay: index * 50,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 400,
+          delay: index * 50,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, []);
+
+    const handlePressIn = () => {
+      Animated.spring(pressAnim, {
+        toValue: 0.95,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const handlePressOut = () => {
+      Animated.spring(pressAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+      }).start();
+    };
     
     return (
-      <TouchableOpacity
-        style={styles.photoCard}
-        onPress={() => openPhotoDetail(item)}
-        activeOpacity={0.9}
+      <Animated.View
+        style={[
+          styles.photoCard,
+          {
+            opacity: fadeAnim,
+            transform: [
+              { scale: Animated.multiply(scaleAnim, pressAnim) },
+            ],
+          },
+        ]}
       >
-        <Image
-          source={{ uri: `https://picsum.photos/id/${item.id}/400/400` }}
-          style={styles.photoImage}
-          resizeMode="cover"
-        />
-        <LinearGradient
-          colors={[...gradientColors, 'transparent']}
-          start={{ x: 0, y: 1 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.photoGradient}
-        />
-        <View style={styles.photoOverlay}>
-          <View style={styles.authorBadge}>
-            <Text style={styles.photoAuthor} numberOfLines={1}>
-              {item.author}
+        <TouchableOpacity
+          onPress={() => openPhotoDetail(item)}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          activeOpacity={1}
+          style={{ flex: 1 }}
+        >
+          {!imageLoaded && (
+            <View style={styles.skeletonLoader}>
+              <ActivityIndicator size="small" color="#2C3E50" />
+            </View>
+          )}
+          <Image
+            source={{ uri: `https://picsum.photos/id/${item.id}/400/400` }}
+            style={styles.photoImage}
+            resizeMode="cover"
+            onLoad={() => setImageLoaded(true)}
+          />
+          <LinearGradient
+            colors={[...gradientColors, 'transparent']}
+            start={{ x: 0, y: 1 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.photoGradient}
+          />
+          <View style={styles.photoOverlay}>
+            <View style={styles.authorBadge}>
+              <Text style={styles.photoAuthor} numberOfLines={1}>
+                {item.author}
+              </Text>
+            </View>
+            <View style={styles.badgeRow}>
+              <View style={styles.idBadge}>
+                <Text style={styles.photoId}>ID: {item.id}</Text>
+              </View>
+              <View style={styles.ratioBadge}>
+                <Text style={styles.ratioText}>{aspectRatio.toFixed(1)}:1</Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.resolutionBadge}>
+            <Text style={styles.resolutionText}>
+              {item.width}×{item.height}
             </Text>
           </View>
-          <View style={styles.idBadge}>
-            <Text style={styles.photoId}>ID: {item.id}</Text>
-          </View>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </Animated.View>
     );
   };
+
+  // Renderizar cada foto
+  const renderPhotoItem = ({ item, index }) => (
+    <AnimatedPhotoCard item={item} index={index} />
+  );
 
   if (loading) {
     return (
@@ -125,26 +217,49 @@ export default function App() {
     );
   }
 
+  // Parallax effect para el header
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [120, 85],
+    extrapolate: 'clamp',
+  });
+
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 50],
+    outputRange: [1, 0.8],
+    extrapolate: 'clamp',
+  });
+
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="transparent" translucent />
       <ExpoStatusBar style="light" />
       
-      {/* Header profesional */}
-      <LinearGradient
-        colors={['#2C3E50', '#34495E']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        <View style={styles.headerContent}>
-          <Text style={styles.headerEmoji}>📸</Text>
-          <Text style={styles.headerTitle}>Galería Profesional</Text>
-          <Text style={styles.headerSubtitle}>
-            {photos.length} fotografías de alta calidad
-          </Text>
-        </View>
-      </LinearGradient>
+      {/* Header profesional con parallax */}
+      <Animated.View style={[styles.headerWrapper, { height: headerHeight }]}>
+        <LinearGradient
+          colors={['#2C3E50', '#34495E']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <Animated.View style={[styles.headerContent, { opacity: headerOpacity }]}>
+            <View style={styles.titleContainer}>
+              <View style={styles.titleRow}>
+                <View style={styles.decorativeLine} />
+                <Text style={styles.headerEmoji}>📷</Text>
+                <View style={styles.decorativeLine} />
+              </View>
+              <Text style={styles.headerTitle}>Galería Profesional</Text>
+              <View style={styles.infoRow}>
+                <Text style={styles.headerSubtitle}>{photos.length} fotos</Text>
+                <View style={styles.dot} />
+                <Text style={styles.headerAuthor}>Erick Ortiz</Text>
+              </View>
+            </View>
+          </Animated.View>
+        </LinearGradient>
+      </Animated.View>
 
       {/* Lista de fotos */}
       <FlatList
@@ -154,6 +269,11 @@ export default function App() {
         numColumns={2}
         contentContainerStyle={styles.photoList}
         showsVerticalScrollIndicator={false}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -164,20 +284,28 @@ export default function App() {
         }
       />
 
-      {/* Modal para ver detalles de la foto */}
+      {/* Modal para ver detalles de la foto con blur */}
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={modalVisible}
         onRequestClose={closeModal}
       >
         <View style={styles.modalContainer}>
-          <TouchableOpacity
-            style={styles.modalBackdrop}
-            activeOpacity={1}
-            onPress={closeModal}
-          >
-            <View style={styles.modalContent}>
+          <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill}>
+            <TouchableOpacity
+              style={styles.modalBackdrop}
+              activeOpacity={1}
+              onPress={closeModal}
+            >
+              <Animated.View 
+                style={[
+                  styles.modalContent,
+                  {
+                    transform: [{ scale: modalScale }],
+                  },
+                ]}
+              >
               {selectedPhoto && (
                 <ScrollView
                   contentContainerStyle={styles.modalScrollContent}
@@ -267,8 +395,9 @@ export default function App() {
                   </TouchableOpacity>
                 </ScrollView>
               )}
-            </View>
-          </TouchableOpacity>
+              </Animated.View>
+            </TouchableOpacity>
+          </BlurView>
         </View>
       </Modal>
     </View>
@@ -301,40 +430,73 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
+  headerWrapper: {
+    width: '100%',
+    overflow: 'hidden',
+  },
   header: {
-    paddingTop: 60,
-    paddingBottom: 30,
+    flex: 1,
+    paddingTop: 55,
+    paddingBottom: 15,
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
     shadowColor: '#2C3E50',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
   },
   headerContent: {
     alignItems: 'center',
+    width: '100%',
+  },
+  titleContainer: {
+    alignItems: 'center',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  decorativeLine: {
+    width: 40,
+    height: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    marginHorizontal: 12,
   },
   headerEmoji: {
-    fontSize: 48,
-    marginBottom: 8,
+    fontSize: 28,
   },
   headerTitle: {
-    fontSize: 32,
-    fontWeight: '900',
+    fontSize: 22,
+    fontWeight: '800',
     color: '#ffffff',
-    marginBottom: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    marginBottom: 6,
     letterSpacing: 1,
   },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   headerSubtitle: {
-    fontSize: 16,
-    color: '#ffffff',
+    fontSize: 12,
+    color: '#ECF0F1',
     fontWeight: '600',
-    opacity: 0.95,
+    opacity: 0.9,
+  },
+  dot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+  },
+  headerAuthor: {
+    fontSize: 12,
+    color: '#ECF0F1',
+    fontWeight: '500',
+    opacity: 0.9,
   },
   photoList: {
     padding: 16,
@@ -352,7 +514,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 8,
-    transform: [{ scale: 1 }],
+  },
+  skeletonLoader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#E1E8ED',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
   },
   photoImage: {
     width: '100%',
@@ -406,6 +578,47 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   photoId: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  ratioBadge: {
+    backgroundColor: 'rgba(22, 160, 133, 0.95)',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 12,
+    shadowColor: '#16A085',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  ratioText: {
+    color: '#ffffff',
+    fontSize: 8,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  resolutionBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(41, 128, 185, 0.95)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    shadowColor: '#2980B9',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  resolutionText: {
     color: '#ffffff',
     fontSize: 9,
     fontWeight: '700',
