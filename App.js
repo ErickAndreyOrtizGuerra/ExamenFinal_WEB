@@ -20,16 +20,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = (width - 48) / 2;
 
-// Paleta de colores vibrantes para las tarjetas
+// Paleta de colores profesionales y elegantes
 const CARD_COLORS = [
-  ['#FF6B9D', '#C06C84'],
-  ['#4ECDC4', '#44A08D'],
-  ['#F7971E', '#FFD200'],
-  ['#667EEA', '#764BA2'],
-  ['#FF6B6B', '#EE5A6F'],
-  ['#56CCF2', '#2F80ED'],
-  ['#F093FB', '#F5576C'],
-  ['#4FACFE', '#00F2FE'],
+  ['#2C3E50', '#34495E'], // Azul marino oscuro
+  ['#16A085', '#1ABC9C'], // Verde esmeralda
+  ['#2980B9', '#3498DB'], // Azul profesional
+  ['#8E44AD', '#9B59B6'], // Púrpura elegante
+  ['#2C3E50', '#7F8C8D'], // Gris carbón
+  ['#27AE60', '#2ECC71'], // Verde corporativo
+  ['#D35400', '#E67E22'], // Naranja profesional
+  ['#34495E', '#5D6D7E'], // Gris azulado
 ];
 
 export default function App() {
@@ -100,11 +100,11 @@ export default function App() {
         <View style={styles.photoOverlay}>
           <View style={styles.authorBadge}>
             <Text style={styles.photoAuthor} numberOfLines={1}>
-              ✨ {item.author}
+              {item.author}
             </Text>
           </View>
           <View style={styles.idBadge}>
-            <Text style={styles.photoId}>#{item.id}</Text>
+            <Text style={styles.photoId}>ID: {item.id}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -114,12 +114,12 @@ export default function App() {
   if (loading) {
     return (
       <LinearGradient
-        colors={['#667EEA', '#764BA2', '#F093FB']}
+        colors={['#2C3E50', '#34495E', '#2C3E50']}
         style={styles.loadingContainer}
       >
         <View style={styles.loadingContent}>
           <ActivityIndicator size="large" color="#ffffff" />
-          <Text style={styles.loadingText}>✨ Cargando galería mágica...</Text>
+          <Text style={styles.loadingText}>Cargando galería profesional...</Text>
         </View>
       </LinearGradient>
     );
@@ -130,18 +130,18 @@ export default function App() {
       <StatusBar backgroundColor="transparent" translucent />
       <ExpoStatusBar style="light" />
       
-      {/* Header con gradiente vibrante */}
+      {/* Header profesional */}
       <LinearGradient
-        colors={['#667EEA', '#764BA2', '#F093FB']}
+        colors={['#2C3E50', '#34495E']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
       >
         <View style={styles.headerContent}>
-          <Text style={styles.headerEmoji}>🎨</Text>
-          <Text style={styles.headerTitle}>Galería Colorida</Text>
+          <Text style={styles.headerEmoji}>📸</Text>
+          <Text style={styles.headerTitle}>Galería Profesional</Text>
           <Text style={styles.headerSubtitle}>
-            ✨ {photos.length} fotos increíbles
+            {photos.length} fotografías de alta calidad
           </Text>
         </View>
       </LinearGradient>
@@ -158,8 +158,8 @@ export default function App() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#6366f1']}
-            tintColor="#6366f1"
+            colors={['#2C3E50']}
+            tintColor="#2C3E50"
           />
         }
       />
@@ -192,11 +192,14 @@ export default function App() {
                       resizeMode="cover"
                     />
                     <LinearGradient
-                      colors={['transparent', 'rgba(0,0,0,0.8)']}
+                      colors={['transparent', 'rgba(44, 62, 80, 0.95)']}
                       style={styles.modalImageGradient}
                     >
                       <Text style={styles.modalImageTitle}>
-                        ✨ {selectedPhoto.author}
+                        {selectedPhoto.author}
+                      </Text>
+                      <Text style={styles.modalImageSubtitle}>
+                        Fotógrafo Profesional
                       </Text>
                     </LinearGradient>
                   </View>
@@ -204,35 +207,35 @@ export default function App() {
                   <View style={styles.modalInfo}>
                     <View style={styles.infoCard}>
                       <LinearGradient
-                        colors={['#FF6B9D', '#C06C84']}
+                        colors={['#2980B9', '#3498DB']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={styles.infoCardGradient}
                       >
                         <Text style={styles.infoEmoji}>🆔</Text>
-                        <Text style={styles.infoCardLabel}>ID</Text>
+                        <Text style={styles.infoCardLabel}>Identificador</Text>
                         <Text style={styles.infoCardValue}>{selectedPhoto.id}</Text>
                       </LinearGradient>
                     </View>
 
                     <View style={styles.infoCard}>
                       <LinearGradient
-                        colors={['#4ECDC4', '#44A08D']}
+                        colors={['#16A085', '#1ABC9C']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={styles.infoCardGradient}
                       >
                         <Text style={styles.infoEmoji}>📐</Text>
-                        <Text style={styles.infoCardLabel}>Dimensiones</Text>
+                        <Text style={styles.infoCardLabel}>Resolución</Text>
                         <Text style={styles.infoCardValue}>
-                          {selectedPhoto.width} x {selectedPhoto.height}
+                          {selectedPhoto.width} × {selectedPhoto.height}
                         </Text>
                       </LinearGradient>
                     </View>
 
                     <View style={styles.infoFullCard}>
                       <View style={styles.infoFullRow}>
-                        <Text style={styles.infoFullLabel}>🔗 URL Original</Text>
+                        <Text style={styles.infoFullLabel}>🔗 Enlace Original</Text>
                         <Text style={styles.infoFullValue} numberOfLines={2}>
                           {selectedPhoto.url}
                         </Text>
@@ -241,7 +244,7 @@ export default function App() {
 
                     <View style={styles.infoFullCard}>
                       <View style={styles.infoFullRow}>
-                        <Text style={styles.infoFullLabel}>📥 URL Descarga</Text>
+                        <Text style={styles.infoFullLabel}>📥 Enlace de Descarga</Text>
                         <Text style={styles.infoFullValue} numberOfLines={2}>
                           {selectedPhoto.download_url}
                         </Text>
@@ -254,12 +257,12 @@ export default function App() {
                     onPress={closeModal}
                   >
                     <LinearGradient
-                      colors={['#667EEA', '#764BA2']}
+                      colors={['#2C3E50', '#34495E']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={styles.closeButton}
                     >
-                      <Text style={styles.closeButtonText}>✕ Cerrar</Text>
+                      <Text style={styles.closeButtonText}>Cerrar</Text>
                     </LinearGradient>
                   </TouchableOpacity>
                 </ScrollView>
@@ -275,7 +278,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF5F7',
+    backgroundColor: '#ECF0F1',
   },
   loadingContainer: {
     flex: 1,
@@ -304,7 +307,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    shadowColor: '#667EEA',
+    shadowColor: '#2C3E50',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
@@ -392,11 +395,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   idBadge: {
-    backgroundColor: 'rgba(102, 126, 234, 0.95)',
+    backgroundColor: 'rgba(44, 62, 80, 0.95)',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 15,
-    shadowColor: '#667EEA',
+    shadowColor: '#2C3E50',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.4,
     shadowRadius: 4,
@@ -404,8 +407,9 @@ const styles = StyleSheet.create({
   },
   photoId: {
     color: '#ffffff',
-    fontSize: 10,
-    fontWeight: '800',
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   modalContainer: {
     flex: 1,
@@ -456,6 +460,15 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+    letterSpacing: 0.5,
+  },
+  modalImageSubtitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ECF0F1',
+    marginTop: 4,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   modalInfo: {
     width: '100%',
@@ -506,7 +519,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#667EEA',
+    borderLeftColor: '#2C3E50',
   },
   infoFullRow: {
     width: '100%',
@@ -514,7 +527,7 @@ const styles = StyleSheet.create({
   infoFullLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#667EEA',
+    color: '#2C3E50',
     marginBottom: 6,
     letterSpacing: 0.5,
   },
@@ -532,7 +545,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 40,
     borderRadius: 25,
-    shadowColor: '#667EEA',
+    shadowColor: '#2C3E50',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,
     shadowRadius: 10,
