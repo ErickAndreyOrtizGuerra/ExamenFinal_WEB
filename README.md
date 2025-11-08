@@ -1,6 +1,6 @@
 # Galería de Fotos - Examen Final - Erick Ortiz 
 
-Aplicación móvil de galería de fotos desarrollada con **React Native** y **Expo** (template blank) que consume la API de [Picsum Photos](https://picsum.photos/v2/list).
+Aplicación móvil de galería de fotos desarrollada con **React Native** y **Expo** que consume la API de [Picsum Photos](https://picsum.photos/v2/list).
 
 ## 🎯 Características
 
